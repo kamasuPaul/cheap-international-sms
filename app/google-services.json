@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "226478391897",
+    "project_id": "cheap-internal-sms-app",
+    "storage_bucket": "cheap-internal-sms-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226478391897:android:0364ca669f83525d95a748",
+        "android_client_info": {
+          "package_name": "com.softappsuganda.cheapinternationalsmsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "226478391897-al5t69nb79u3cljj89at4pdci65mqrpu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKOrcW6J0QRUoJiQUSVGHU9eCUC6X1LJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "226478391897-al5t69nb79u3cljj89at4pdci65mqrpu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
