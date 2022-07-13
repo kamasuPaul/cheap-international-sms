@@ -69,12 +69,25 @@ public class Tools {
     }
 
     public static String getNetwork(String number) {
+        //TODO IMPLEMENT DETECTING NETWORK FROM HNC STORED IN FIREBASE
 //        if(true){
 //            return "LYCA";
 //        }
-        if (number.startsWith("075")) {
+        if (number.startsWith("075")
+                ||number.startsWith("+25675")
+                ||number.startsWith("+25670")
+                ||number.startsWith("+25674")
+                ||number.startsWith("+25620")
+        ) {
             return "AIRTEL";
-        } else if (number.startsWith("078")) {
+        } else if (number.startsWith("078")
+                ||number.startsWith("077")
+                ||number.startsWith("+25678")
+                ||number.startsWith("+25677")
+                ||number.startsWith("+25676")
+                ||number.startsWith("+25639")
+                ||number.startsWith("+25631")
+        ) {
             return "MTN";
         } else {
             return "LYCA";

@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         //subscribe to a network topic
-        this.subscribeToTopics();
+//        this.subscribeToTopics();
 
     }
 
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     // When this device disconnects, remove it
-                    networksRef.onDisconnect().setValue("");
+//                    networksRef.onDisconnect().setValue("");
                     presenceRef.onDisconnect().setValue("offline");
 
                     // When I disconnect, update the last time I was seen online
