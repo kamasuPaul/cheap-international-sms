@@ -73,14 +73,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Map<String, String> data = remoteMessage.getData();
         String message = data.get("message");
         String phone_number = data.get("phone");
-        Log.d(TAG, "message:"+message);
-        Log.d(TAG, "phone:"+phone_number);
+        String messageId = data.get("message_id");
 
-//        Toast.makeText(, "", Toast.LENGTH_SHORT).show();
         if(phone_number !=null && message !=null){
-            Tools.sendSms(context,phone_number,message);
+            Tools.sendSms(context,phone_number,message,messageId);
         }else{
-            Tools.sendSms(context,"0750883001", remoteMessage.getNotification().getBody());
+            Tools.sendSms(context,"0750883001", remoteMessage.getNotification().getBody(),messageId);
         }
     }
 }

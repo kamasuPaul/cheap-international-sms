@@ -2,9 +2,12 @@ package com.softappsuganda.cheapinternationalsmsapp.helpers;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
@@ -15,6 +18,10 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.softappsuganda.cheapinternationalsmsapp.MainActivity;
 import com.softappsuganda.cheapinternationalsmsapp.MyFirebaseMessagingService;
 import com.softappsuganda.cheapinternationalsmsapp.MyIntentService;
@@ -94,9 +101,28 @@ public class Tools {
         }
     }
 
-    public static void sendSms(Context context, String number, String smsText) {
-        Intent intent = new Intent(context, MyIntentService.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+    public static void sendSms(Context context, String number, String smsText, String messageID) {
+        String SENT = "SMS_SENT"+messageID;
+        Intent intent = new Intent(SENT);
+        intent.putExtra("id",messageID);
+        PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String messageId = intent.getStringExtra("id");
+                switch(getResultCode()){
+                    case Activity.RESULT_OK:
+                        updateMessagestatus(context, messageId,"Sent");
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        updateMessagestatus(context, messageId,"Failed");
+                        break;
+                    default: // unknown
+                        updateMessagestatus(context, messageId,"Unknown");
+                }
+            }
+        }, new IntentFilter(SENT));
         SmsManager smsManager = null;
         int subscriptionId = getSubscriptionNumber(number, context);
         if (subscriptionId == -1) {
@@ -106,7 +132,7 @@ public class Tools {
             smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId);
 //            Toast.makeText(MainActivity.this, "sub:" + subscriptionId, Toast.LENGTH_SHORT).show();
         }
-        smsManager.sendTextMessage(number, null, smsText, pendingIntent, null);
+        smsManager.sendTextMessage(number, null, smsText, sentIntent, null);
 //        Toast.makeText(context, "Message sent", Toast.LENGTH_SHORT).show();
     }
     public static ArrayList<String> getTopics(Context context) {
@@ -142,5 +168,17 @@ public class Tools {
             }
         }
         return networks;
+    }
+    public static void updateMessagestatus(Context context,String messageId, String status){
+        FirebaseFirestore.getInstance()
+                .collection("messages")
+                .document(messageId)
+                .update("status", status)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+//                        Log.d(TAG, "SENT MESSAGE WITH ID:"+messageId);
+                    }
+                });
     }
 }
