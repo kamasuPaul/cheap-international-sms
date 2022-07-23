@@ -34,6 +34,14 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <receiver android:name=".MessageDeliveryStatusBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.softappsuganda.cheapinternationalsmsapp.action.ACTION_SMS_SENT" />
+                <category android:name="com.softappsuganda.cheapinternationalsmsapp.DEFAULT"/>
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>
