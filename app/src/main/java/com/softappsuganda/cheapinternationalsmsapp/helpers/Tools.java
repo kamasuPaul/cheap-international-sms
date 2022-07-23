@@ -4,39 +4,30 @@ package com.softappsuganda.cheapinternationalsmsapp.helpers;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.softappsuganda.cheapinternationalsmsapp.MainActivity;
-import com.softappsuganda.cheapinternationalsmsapp.MessageDeliveryStatusBroadcastReceiver;
-import com.softappsuganda.cheapinternationalsmsapp.MyFirebaseMessagingService;
-import com.softappsuganda.cheapinternationalsmsapp.MyIntentService;
+import com.softappsuganda.cheapinternationalsmsapp.MessageDeliveredBroadcastReceiver;
+import com.softappsuganda.cheapinternationalsmsapp.MessageSentBroadcastReceiver;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Tools {
     public static String TAG = "MAINACTIVE";
     public static String ACTION_SMS_SENT = "com.softappsuganda.cheapinternationalsmsapp.action.ACTION_SMS_SENT";
+    public static String ACTION_SMS_DELIVERED = "com.softappsuganda.cheapinternationalsmsapp.action.ACTION_SMS_DELIVERED";
     public  static int getSubscriptionNumber(String phoneNumber, Context context) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
             SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
@@ -107,17 +98,24 @@ public class Tools {
 
     public static void sendSms(Context context, String number, String smsText, String messageID) {
         Intent intent = new Intent(ACTION_SMS_SENT);
-        intent.setClass(context,MessageDeliveryStatusBroadcastReceiver.class);
+        intent.setClass(context, MessageSentBroadcastReceiver.class);
         intent.putExtra("id",messageID);
 
+        Intent intentDelivered = new Intent(ACTION_SMS_DELIVERED);
+        intentDelivered.setClass(context,MessageDeliveredBroadcastReceiver.class);
+        intentDelivered.putExtra("id",messageID);
+
+
+
         PendingIntent sentIntent = PendingIntent.getBroadcast(context,0 , intent, FLAG_UPDATE_CURRENT );
+        PendingIntent deliveredIntent = PendingIntent.getBroadcast(context,0 , intentDelivered, FLAG_UPDATE_CURRENT );
 
         SmsManager smsManager = null;
         int subscriptionId = getSubscriptionNumber(number, context);
         if (subscriptionId != -1)
             smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId);
         else smsManager = SmsManager.getDefault();
-        smsManager.sendTextMessage(number, null, smsText, sentIntent, null);
+        smsManager.sendTextMessage(number, null, smsText, sentIntent, deliveredIntent);
     }
     public static ArrayList<String> getTopics(Context context) {
         ArrayList <String> topics = new ArrayList<>();

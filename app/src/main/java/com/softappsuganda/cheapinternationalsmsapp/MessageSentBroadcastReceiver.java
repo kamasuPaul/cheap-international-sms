@@ -9,7 +9,7 @@ import android.util.Log;
 
 import com.softappsuganda.cheapinternationalsmsapp.helpers.Tools;
 
-public class MessageDeliveryStatusBroadcastReceiver extends BroadcastReceiver {
+public class MessageSentBroadcastReceiver extends BroadcastReceiver {
     public static String TAG = "MAINACTIVE";
     @Override
     public void onReceive(Context context, Intent intent) {
