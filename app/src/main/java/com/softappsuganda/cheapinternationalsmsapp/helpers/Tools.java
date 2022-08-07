@@ -106,7 +106,6 @@ public class Tools {
         intentDelivered.putExtra("id",messageID);
 
 
-
         PendingIntent sentIntent = PendingIntent.getBroadcast(context,0 , intent, FLAG_UPDATE_CURRENT );
         PendingIntent deliveredIntent = PendingIntent.getBroadcast(context,0 , intentDelivered, FLAG_UPDATE_CURRENT );
 

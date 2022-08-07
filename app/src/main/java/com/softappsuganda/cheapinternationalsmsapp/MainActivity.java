@@ -1,20 +1,25 @@
 package com.softappsuganda.cheapinternationalsmsapp;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -31,6 +36,12 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.DialogOnAnyDeniedMultiplePermissionsListener;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.softappsuganda.cheapinternationalsmsapp.helpers.Tools;
 
 import java.util.HashMap;
@@ -45,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     // Write a message to the database
     FirebaseDatabase database;
     SharedPreferences preferences;
+    Switch mySwitch;
+    TextView textViewConnected;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,32 +95,69 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            }
 //        });
+        textViewConnected = findViewById(R.id.textViewConnected);
+        mySwitch = findViewById(R.id.switchConnect);
+        Boolean allowSend = preferences.getBoolean("allow_send", false);
+        mySwitch.setChecked(allowSend);
+        setConnectionValue(allowSend);
+        mySwitch.setOnClickListener(new View.OnClickListener() {
 
-        sendMessageButton = findViewById(R.id.buttonSendMessage);
-        phoneNumber = findViewById(R.id.editTextPhoneNumber);
-        messageText = findViewById(R.id.editTextMessage);
-        //send sms using sms manager
-        sendMessageButton.setOnClickListener(new View.OnClickListener() {
-
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
             @Override
             public void onClick(View v) {
-                String number = phoneNumber.getText().toString();
-                String smsText = messageText.getText().toString();
-                Map<String, String> data = new HashMap<>();
-                data.put("phone", number);
-                data.put("sms_text", smsText);
-                data.put("status", "Pending");
-
-                db.collection("messages").document().set(data).addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        Toast.makeText(MainActivity.this, "Message queued", Toast.LENGTH_SHORT).show();
+                Switch mySwitch = (Switch)v;
+                if(mySwitch.isChecked()){
+                    requestPermissions();
+                    if(allPermissionsGranted()){
+                        preferences.edit().putBoolean("allow_send",true).commit();
                     }
-                });
+                }else{
+                    preferences.edit().putBoolean("allow_send",false).commit();
+                }
+                setConnectionValue(mySwitch.isChecked());
             }
         });
+//        sendMessageButton = findViewById(R.id.buttonSendMessage);
+//        phoneNumber = findViewById(R.id.editTextPhoneNumber);
+//        messageText = findViewById(R.id.editTextMessage);
+//        //send sms using sms manager
+//        sendMessageButton.setOnClickListener(new View.OnClickListener() {
+//
+//            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+//            @Override
+//            public void onClick(View v) {
+//                String number = phoneNumber.getText().toString();
+//                String smsText = messageText.getText().toString();
+//                Map<String, String> data = new HashMap<>();
+//                data.put("phone", number);
+//                data.put("sms_text", smsText);
+//                data.put("status", "Pending");
+//
+//                db.collection("messages").document().set(data).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                    @Override
+//                    public void onSuccess(Void unused) {
+//                        Toast.makeText(MainActivity.this, "Message queued", Toast.LENGTH_SHORT).show();
+//                    }
+//                });
+//            }
+//        });
 
+        //check if all permissions are granted and setup firebase messaging
+        if(allPermissionsGranted()){
+            setupFirebaseMessaging();
+        }
+
+    }
+
+    private void setConnectionValue(Boolean allowSend) {
+        if(allowSend){
+            textViewConnected.setText("Connected");
+        }else{
+            textViewConnected.setText("Disconnected");
+        }
+        preferences.edit().putBoolean("allow_send",allowSend).commit();
+    }
+
+    public void setupFirebaseMessaging() {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
@@ -130,10 +181,6 @@ public class MainActivity extends AppCompatActivity {
                         setPresence();
                     }
                 });
-
-        //subscribe to a network topic
-//        this.subscribeToTopics();
-
     }
 
     @Override
@@ -186,13 +233,15 @@ public class MainActivity extends AppCompatActivity {
                     //set the networks
                     HashMap<String, String> networks = Tools.getNetworks(getApplicationContext());
                     int index = 0;
-                    for (Map.Entry<String, String> network : networks.entrySet()) {
-                        String hnc = network.getKey();
-                        Object networkName = network.getValue();
-                        DatabaseReference networkRef = networksRef.child(String.valueOf(index));
-                        networkRef.child("name").setValue(networkName);
-                        networkRef.child("hnc").setValue(hnc);
-                        index++;
+                    if(networks != null){
+                        for (Map.Entry<String, String> network : networks.entrySet()) {
+                            String hnc = network.getKey();
+                            Object networkName = network.getValue();
+                            DatabaseReference networkRef = networksRef.child(String.valueOf(index));
+                            networkRef.child("name").setValue(networkName);
+                            networkRef.child("hnc").setValue(hnc);
+                            index++;
+                        }
                     }
 
                     // When this device disconnects, remove it
@@ -213,5 +262,61 @@ public class MainActivity extends AppCompatActivity {
                 Log.w(TAG, "Listener was cancelled at .info/connected");
             }
         });
+    }
+    private boolean requestPermissions() {
+        final boolean[] all_granted = new boolean[1];
+        Dexter.withActivity(this)
+                .withPermissions(
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.SEND_SMS
+                )
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        //if permission granted
+                        if (report.areAllPermissionsGranted()) {
+                            all_granted[0] = true;
+                            setupFirebaseMessaging();
+                            setConnectionValue(true);
+                        } else if (report.isAnyPermissionPermanentlyDenied()) {
+                            setConnectionValue(false);
+                            //TODO open setting activity , where permissions can be set
+                        } else {
+                            DialogOnAnyDeniedMultiplePermissionsListener dialog = DialogOnAnyDeniedMultiplePermissionsListener.Builder
+                                    .withContext(MainActivity.this)
+                                    .withTitle("Contacts and Phone State")
+                                    .withMessage("These permissions are needed to use the app")
+                                    .withButtonText("Continue")
+                                    .withIcon(R.mipmap.ic_launcher)
+                                    .build();
+                            dialog.onPermissionsChecked(report);
+                            Toast.makeText(MainActivity.this, "This app requires the  requested permissions to work", Toast.LENGTH_LONG).show();
+                            all_granted[0] = false;
+
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+                        Toast.makeText(MainActivity.this, "This app requires the  requested permissions to work,go to setting to set them", Toast.LENGTH_LONG).show();
+                        token.continuePermissionRequest();
+
+                    }
+                })
+                .onSameThread()
+                .check();
+        return all_granted[0];
+    }
+    private boolean allPermissionsGranted() {
+        boolean permission = false;
+        //check if permissions have been granted
+        if (checkCallingOrSelfPermission(Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED){
+            if (checkCallingOrSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED){
+                if (checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED){
+                        permission = true;
+
+                    }}}
+        return permission;
     }
 }
