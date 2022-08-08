@@ -97,6 +97,12 @@ public class Tools {
     }
 
     public static void sendSms(Context context, String number, String smsText, String messageID) {
+        //drop the sms if device is disconnected
+        Boolean allowSend = context.getSharedPreferences("messages", Context.MODE_PRIVATE)
+                .getBoolean("allow_send", false);
+        if(!allowSend){
+            return;
+        }
         Intent intent = new Intent(ACTION_SMS_SENT);
         intent.setClass(context, MessageSentBroadcastReceiver.class);
         intent.putExtra("id",messageID);

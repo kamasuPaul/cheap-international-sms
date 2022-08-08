@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase database;
     SharedPreferences preferences;
     Switch mySwitch;
-    TextView textViewConnected;
+    TextView textViewConnected,textViewDeviceId;
 
 
     @Override
@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
         textViewConnected = findViewById(R.id.textViewConnected);
+        textViewDeviceId = findViewById(R.id.textViewDeviceId);
         mySwitch = findViewById(R.id.switchConnect);
         Boolean allowSend = preferences.getBoolean("allow_send", false);
         mySwitch.setChecked(allowSend);
@@ -173,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putString("device_token", token);
                         editor.commit();
+                        textViewDeviceId.setText(token.substring(0,8));
 
                         // Log and toast
 //                        String msg = getString(R.string.msg_token_fmt, token);
