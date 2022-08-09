@@ -14,6 +14,12 @@ import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -157,15 +163,24 @@ public class Tools {
         return networks;
     }
     public static void updateMessagestatus(Context context,String messageId, String status){
-        FirebaseFirestore.getInstance()
-                .collection("messages")
-                .document(messageId)
-                .update("status", status)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-//                        Log.d(TAG, "SENT MESSAGE WITH ID:"+messageId);
-                    }
-                });
+        //create a background job to update message status when device is connected
+        //pass arguments to the work object
+        Data myData = new Data.Builder()
+                .putString(MessageWorker.MESSAGE_ID, messageId)
+                .putString(MessageWorker.MESSAGE_STATUS, status)
+                .build();
+
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        WorkRequest updateWorkRequest =
+                new OneTimeWorkRequest.Builder(MessageWorker.class)
+                        .setConstraints(constraints)
+                        .setInputData(myData)
+                        .build();
+        WorkManager
+                .getInstance(context)
+                .enqueue(updateWorkRequest);
+
     }
 }
