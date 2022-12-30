@@ -107,6 +107,7 @@ public class Tools {
         Boolean allowSend = context.getSharedPreferences("messages", Context.MODE_PRIVATE)
                 .getBoolean("allow_send", false);
         if(!allowSend){
+            Log.d(TAG,"Sending not allowed by device");
             return;
         }
         Intent intent = new Intent(ACTION_SMS_SENT);
@@ -173,7 +174,7 @@ public class Tools {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-        WorkRequest updateWorkRequest =
+        OneTimeWorkRequest updateWorkRequest =
                 new OneTimeWorkRequest.Builder(MessageWorker.class)
                         .setConstraints(constraints)
                         .setInputData(myData)

@@ -3,12 +3,12 @@ plugins {
 }
 apply plugin: 'com.google.gms.google-services'
 android {
-    compileSdk 30
+    compileSdk 31
 
     defaultConfig {
         applicationId "com.softappsuganda.cheapinternationalsmsapp"
         minSdk 22
-        targetSdk 30
+        targetSdk 31
         versionCode 1
         versionName "1.0"
 
@@ -42,6 +42,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging'
     implementation "androidx.work:work-runtime:2.6.0"
     implementation 'com.karumi:dexter:6.0.0'                   //permissions library dexter
+    implementation "androidx.concurrent:concurrent-futures:1.1.0"
+    implementation 'com.firebaseui:firebase-ui-firestore:8.0.2'
+    implementation 'com.balysv:material-ripple:1.0.2'                  // ripple effect
+    implementation 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1' //letter icons
 
 
 

@@ -5,10 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -17,12 +18,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
+import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -33,6 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -42,7 +45,10 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.DialogOnAnyDeniedMultiplePermissionsListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.softappsuganda.cheapinternationalsmsapp.adapters.AdapterMessageList;
+import com.softappsuganda.cheapinternationalsmsapp.helpers.LinearLayoutManagerWrapper;
 import com.softappsuganda.cheapinternationalsmsapp.helpers.Tools;
+import com.softappsuganda.cheapinternationalsmsapp.models.Message;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences preferences;
     Switch mySwitch;
     TextView textViewConnected,textViewDeviceId;
+    RecyclerView messagesRecyclerView;
+    AdapterMessageList firebaseMessagesAdapter;
 
 
     @Override
@@ -97,6 +105,9 @@ public class MainActivity extends AppCompatActivity {
 //        });
         textViewConnected = findViewById(R.id.textViewConnected);
         textViewDeviceId = findViewById(R.id.textViewDeviceId);
+        messagesRecyclerView = findViewById(R.id.matched_items_recylerview);
+        messagesRecyclerView.setLayoutManager(new LinearLayoutManagerWrapper(this, LinearLayoutManager.VERTICAL, false));
+
         mySwitch = findViewById(R.id.switchConnect);
         Boolean allowSend = preferences.getBoolean("allow_send", false);
         mySwitch.setChecked(allowSend);
@@ -146,6 +157,22 @@ public class MainActivity extends AppCompatActivity {
         if(allPermissionsGranted()){
             setupFirebaseMessaging();
         }
+        fetchMessages();
+
+    }
+
+    private void fetchMessages() {
+        String device_token = preferences.getString("device_token", null);
+        Query query = db
+                .collection("messages")
+                .whereEqualTo("send_via",device_token!=null?device_token:"")
+                .orderBy("created_at", Query.Direction.DESCENDING)
+                .limit(100);
+        FirestoreRecyclerOptions<Message> options = new FirestoreRecyclerOptions.Builder<Message>()
+                .setQuery(query, Message.class)
+                .build();
+        firebaseMessagesAdapter = new AdapterMessageList(options,getApplicationContext());
+        messagesRecyclerView.setAdapter(firebaseMessagesAdapter);
 
     }
 
@@ -320,5 +347,19 @@ public class MainActivity extends AppCompatActivity {
 
                     }}}
         return permission;
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(firebaseMessagesAdapter!=null){
+            firebaseMessagesAdapter.startListening();
+        }
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(firebaseMessagesAdapter!=null){
+            firebaseMessagesAdapter.stopListening();
+        }
     }
 }
