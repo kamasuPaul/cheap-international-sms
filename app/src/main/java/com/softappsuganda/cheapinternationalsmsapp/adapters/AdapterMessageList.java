@@ -1,12 +1,14 @@
 package com.softappsuganda.cheapinternationalsmsapp.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -50,7 +52,9 @@ public class AdapterMessageList extends FirestoreRecyclerAdapter<Message,Recycle
                 String elipsis = message.getSms_text().length()>20?"...":"";
                 rootView.code.setText(message.getSms_text().substring(0,Math.min(20,message.getSms_text().length()))+elipsis);
 
-                starImageView.setVisibility(View.VISIBLE);
+                if(!message.getStatus().equalsIgnoreCase("Delivered")){
+                    starImageView.setVisibility(View.VISIBLE);
+                }
 
                 String icon_letter = String.valueOf((message.getSms_text()).trim().charAt(0)).toUpperCase();
                 if (!icon_letter.matches("[a-z]")) {//if the first character is not alphabetic
@@ -75,39 +79,41 @@ public class AdapterMessageList extends FirestoreRecyclerAdapter<Message,Recycle
                 if (true) {
                     starImageView.setColorFilter(ContextCompat.getColor(ctx, R.color.green_300), android.graphics.PorterDuff.Mode.SRC_IN);
                 }
-                rootView.linearLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if (mOnItemClickListener != null) {
-//                            mOnItemClickListener.onItemClick(view, ussdActionWithStepsFiltered.get(position), position);
-                        }
-                    }
-                });
-                rootView.linearLayout.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-                        if (mOnItemClickListener != null) {
-//                            mOnItemClickListener.onLongClick(v, ussdActionWithStepsFiltered.get(position), position);
-                        }
-                        return true;
-                    }
-                });
+//                rootView.linearLayout.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        String id = getSnapshots().getSnapshot(position).getId();
+//                        Log.d("TOKEN",id);
+//                        if (mOnItemClickListener != null) {
+////                            mOnItemClickListener.onItemClick(view, ussdActionWithStepsFiltered.get(position), position);
+//                        }
+//                    }
+//                });
+//                rootView.linearLayout.setOnLongClickListener(new View.OnLongClickListener() {
+//                    @Override
+//                    public boolean onLongClick(View v) {
+//                        if (mOnItemClickListener != null) {
+////                            mOnItemClickListener.onLongClick(v, ussdActionWithStepsFiltered.get(position), position);
+//                        }
+//                        return true;
+//                    }
+//                });
                 starImageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (mOnItemClickListener != null) {
-//                            mOnItemClickListener.onStarClick(v, ussdActionWithStepsFiltered.get(position), position);
-                        }
+                        String id = getSnapshots().getSnapshot(position).getId();
+                        Toast.makeText(ctx,"Sending...",Toast.LENGTH_LONG).show();
+                        Tools.sendSms(ctx,message.getPhone(),message.getSms_text(),id);
                     }
                 });
-                paretnStarImageView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mOnItemClickListener != null) {
-
-                        }
-                    }
-                });
+//                paretnStarImageView.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        String id = getSnapshots().getSnapshot(position).getId();
+//                        Log.d("TOKEN star",id);
+////                        Tools.sendSms(ctx,message.getPhone(),message.getSms_text(),id);
+//                    }
+//                });
         }
     }
 
@@ -138,12 +144,6 @@ public class AdapterMessageList extends FirestoreRecyclerAdapter<Message,Recycle
 
     }
 
-
-//    public void setItems(List<Message> actions) {
-//        this.items = actions;
-////        this.ussdActionWithStepsFiltered = actions;
-//        notifyDataSetChanged();
-//    }
 
 
     public static class OriginalViewHolder extends RecyclerView.ViewHolder {
